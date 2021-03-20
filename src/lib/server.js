@@ -1,5 +1,7 @@
 const Fastify = require('fastify');
 const fastifyEnv = require('fastify-env');
+const path = require('path');
+const fastifyAutoload = require('fastify-autoload');
 const { appSchema } = require('../app/commons/schema');
 
 const createServer = () => {
@@ -12,6 +14,9 @@ const createServer = () => {
   fastify.register(fastifyEnv, {
     schema: appSchema,
     dotenv: true,
+  });
+  fastify.register(fastifyAutoload, {
+    dir: path.resolve(__dirname, '../plugins'),
   });
 
   return fastify;

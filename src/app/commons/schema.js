@@ -9,6 +9,9 @@ const appSchema = {
       type: 'string',
       default: '0.0.0.0',
     },
+    DB_URL: {
+      type: 'string',
+    },
   },
 };
 
