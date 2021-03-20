@@ -1,21 +1,19 @@
-const { Product } = require('../models/product');
+const { createProductSchema } = require('./schema/createProduct.schema');
+const productHandlers = require('./products.handler');
+const { getProductsSchema } = require('./schema/getProducts.schema');
 
 module.exports = async fastify => {
   fastify.route({
     url: '/',
     method: 'GET',
-    handler: async () => {
-      const result = await Product.find();
-      return result;
-    },
+    schema: getProductsSchema,
+    handler: productHandlers.getProducts.bind(this, fastify),
   });
 
   fastify.route({
     url: '/',
     method: 'POST',
-    handler: async request => {
-      const product = new Product(request.body);
-      return product.save();
-    },
+    schema: createProductSchema,
+    handler: productHandlers.createProduct.bind(this, fastify),
   });
 };
