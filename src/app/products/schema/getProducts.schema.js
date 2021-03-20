@@ -1,4 +1,9 @@
 const getProductsSchema = {
+  querystring: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {},
+  },
   response: {
     200: {
       type: 'object',

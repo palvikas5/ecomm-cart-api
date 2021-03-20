@@ -3,10 +3,12 @@ const fastifyEnv = require('fastify-env');
 const path = require('path');
 const fastifyAutoload = require('fastify-autoload');
 const { appSchema } = require('../app/commons/schema');
+const routes = require('../app');
 
 const createServer = () => {
   const fastify = Fastify({
     logger: {
+      level: process.env.LOG_LEVEL || 'error',
       prettyPrint: process.env.NODE_ENV !== 'production',
     },
   });
@@ -17,7 +19,9 @@ const createServer = () => {
   });
   fastify.register(fastifyAutoload, {
     dir: path.resolve(__dirname, '../plugins'),
+    ignorePattern: /.*(test|spec).js/,
   });
+  fastify.register(routes);
 
   return fastify;
 };

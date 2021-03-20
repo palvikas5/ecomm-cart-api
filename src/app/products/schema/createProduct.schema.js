@@ -4,7 +4,7 @@ const createProductSchema = {
     required: ['name', 'price'],
     properties: {
       name: { type: 'string', minLength: 1 },
-      price: { type: 'number', min: 1 },
+      price: { type: 'number', minimum: 1 },
     },
   },
 };
