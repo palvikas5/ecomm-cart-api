@@ -22,8 +22,21 @@ const addToCart = async (fastify, request) => {
   return cart;
 };
 
+const updateCartLine = async (fastify, request) => {
+  const { cartId, cartLineId } = request.params;
+  const cart = await cartsService.updateCartLine(
+    fastify,
+    request,
+    cartId,
+    cartLineId,
+    request.body,
+  );
+  return cart;
+};
+
 module.exports = {
   getCartById,
   createCart,
   addToCart,
+  updateCartLine,
 };

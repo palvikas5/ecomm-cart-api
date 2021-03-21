@@ -1,9 +1,13 @@
+const NotFoundError = require('../../errors/error-models/NotFoundError');
 const { computeCart } = require('./cart.helper');
 const { Cart } = require('../models/cart');
 
 const getCartById = async (fastify, request, cartId) => {
-  const response = await Cart.findById(cartId);
-  return response;
+  const cart = await Cart.findById(cartId);
+  if (!cart) {
+    throw new NotFoundError(`Cart with ID: ${cartId} not found`);
+  }
+  return cart;
 };
 
 const createCart = async (fastify, request, requestBody) => {
@@ -42,8 +46,32 @@ const addToCart = async (fastify, request, cartId, requestBody) => {
   return updatedCart;
 };
 
+const updateCartLine = async (
+  fastify,
+  request,
+  cartId,
+  cartLineId,
+  { quantity },
+) => {
+  const cart = await getCartById(fastify, request, cartId);
+  const isCartLinePresent = cart.cartLines.some(line => line.id === cartLineId);
+  if (!isCartLinePresent) {
+    throw new NotFoundError(`CartLine with id: ${cartLineId} not found`);
+  }
+  const updatedCartLines = cart.cartLines.map(cartLine => ({
+    id: cartLine.product.id,
+    quantity: cartLine.id === cartLineId ? quantity : cartLine.quantity,
+  }));
+  const computedCart = await computeCart(updatedCartLines);
+  const updatedCart = await Cart.findByIdAndUpdate(cartId, computedCart, {
+    new: true,
+  });
+  return updatedCart;
+};
+
 module.exports = {
   getCartById,
   createCart,
   addToCart,
+  updateCartLine,
 };
