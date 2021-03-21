@@ -1,4 +1,9 @@
 const createProductSchema = {
+  querystring: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {},
+  },
   body: {
     type: 'object',
     required: ['name', 'price'],

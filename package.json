@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/index.js",
+    "dev": "LOG_LEVEL=debug nodemon src/index.js",
     "lint": "eslint src",
     "lint:fix": "npm run lint -- --fix",
-    "test": "jest -c jest.config.js",
+    "test": "LOG_LEVEL=silent jest -c jest.config.js",
     "prepare": "husky install"
   },
   "dependencies": {
