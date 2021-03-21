@@ -1,16 +1,35 @@
+const {
+  findPromotionsByProductIds,
+} = require('../promotions/promotion.repository');
 const { findProductsInIds } = require('../products/product.repository');
 
+const calculateItemDiscount = (promotions, product, quantity) => {
+  const [itemDiscount] = promotions
+    .filter(promo => promo.productId.equals(product.id))
+    .map(promotion => {
+      const { minimumQuantity, discountPercentage } = promotion;
+
+      const promoQuantities = quantity - (quantity % minimumQuantity);
+      return (promoQuantities * product.price * discountPercentage) / 100;
+    })
+    .sort((d1, d2) => d2 - d1);
+
+  return Number(itemDiscount.toFixed(0));
+};
+
 const computeCart = async productsWithIdAndQuantity => {
-  const products = await findProductsInIds(
-    productsWithIdAndQuantity.map(p => p.id),
-  );
+  const productIds = productsWithIdAndQuantity.map(p => p.id);
+  const [products, promotions] = await Promise.all([
+    findProductsInIds(productIds),
+    findPromotionsByProductIds(productIds),
+  ]);
 
   const cartLines = products.map(product => {
     const { quantity } = productsWithIdAndQuantity.find(
       rp => rp.id === product.id,
     );
     const itemPrice = product.price * quantity;
-    const itemDiscount = 0;
+    const itemDiscount = calculateItemDiscount(promotions, product, quantity);
     return {
       product,
       quantity,

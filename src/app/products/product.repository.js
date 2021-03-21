@@ -7,6 +7,12 @@ const findProductsInIds = async productIds => {
   return products;
 };
 
+const findProductById = async productId => {
+  const product = await Product.findById(productId);
+  return product;
+};
+
 module.exports = {
   findProductsInIds,
+  findProductById,
 };

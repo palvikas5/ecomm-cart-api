@@ -7,7 +7,15 @@ const getCartById = async (fastify, request, cartId) => {
   if (!cart) {
     throw new NotFoundError(`Cart with ID: ${cartId} not found`);
   }
-  return cart;
+  const productsWithIdAndQuantity = cart.cartLines.map(cartLine => ({
+    id: cartLine.product.id,
+    quantity: cartLine.quantity,
+  }));
+  const computedCart = await computeCart(productsWithIdAndQuantity);
+  const updatedCart = await Cart.findByIdAndUpdate(cartId, computedCart, {
+    new: true,
+  });
+  return updatedCart;
 };
 
 const createCart = async (fastify, request, requestBody) => {
@@ -17,7 +25,10 @@ const createCart = async (fastify, request, requestBody) => {
 };
 
 const addToCart = async (fastify, request, cartId, requestBody) => {
-  const cart = await getCartById(fastify, request, cartId);
+  const cart = await Cart.findById(cartId);
+  if (!cart) {
+    throw new NotFoundError(`Cart with ID: ${cartId} not found`);
+  }
   const isNewProduct = cart.cartLines.every(
     cartLine => cartLine.product.id !== requestBody.id,
   );
@@ -53,7 +64,10 @@ const updateCartLine = async (
   cartLineId,
   { quantity },
 ) => {
-  const cart = await getCartById(fastify, request, cartId);
+  const cart = await Cart.findById(cartId);
+  if (!cart) {
+    throw new NotFoundError(`Cart with ID: ${cartId} not found`);
+  }
   const isCartLinePresent = cart.cartLines.some(line => line.id === cartLineId);
   if (!isCartLinePresent) {
     throw new NotFoundError(`CartLine with id: ${cartLineId} not found`);
