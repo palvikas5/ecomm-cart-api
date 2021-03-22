@@ -1,5 +1,7 @@
 const { createServer } = require('../../../lib/server');
 
+jest.spyOn(require('mongoose'), 'connect').mockImplementation(jest.fn());
+
 describe('ajv plugin', () => {
   let fastifyContext;
 

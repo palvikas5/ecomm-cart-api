@@ -4,6 +4,8 @@ const {
 } = require('../../__mocks/create-product.mock');
 const { createServer } = require('../../../../lib/server');
 
+jest.spyOn(require('mongoose'), 'connect').mockImplementation(jest.fn());
+
 const createProductMock = jest
   .spyOn(require('../../products.service'), 'createProduct')
   .mockResolvedValue(createProductMockResponse);
