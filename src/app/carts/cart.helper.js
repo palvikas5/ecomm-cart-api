@@ -4,7 +4,7 @@ const {
 const { findProductsInIds } = require('../products/product.repository');
 
 const calculateItemDiscount = (promotions, product, quantity) => {
-  const [itemDiscount] = promotions
+  const [itemDiscount = 0] = promotions
     .filter(promo => promo.productId.equals(product.id))
     .map(promotion => {
       const { minimumQuantity, discountPercentage } = promotion;

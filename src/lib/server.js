@@ -1,5 +1,6 @@
 const Fastify = require('fastify');
 const fastifyEnv = require('fastify-env');
+const fastifyCors = require('fastify-cors');
 const path = require('path');
 const fastifyAutoload = require('fastify-autoload');
 const { appSchema } = require('../app/commons/schema');
@@ -21,6 +22,7 @@ const createServer = () => {
     dir: path.resolve(__dirname, '../plugins'),
     ignorePattern: /.*(test|spec).js/,
   });
+  fastify.register(fastifyCors);
   fastify.register(routes);
 
   return fastify;
