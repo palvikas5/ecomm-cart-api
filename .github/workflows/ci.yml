@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  DOCKER_REGISTRY_SERVER: ${{ secrets.DOCKER_REGISTRY_SERVER }}
+  APP_NAME: ${{ secrets.APP_NAME }}
+  IMAGE_TAG: ${{ github.sha }}
+  DB_URL: ${{ secrets.DB_URL }}
+
+jobs:
+  lint-and-test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 14.x ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install packages
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+
+  build-and-deploy:
+    name: Build and Deploy
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Container Registry Login
+        run: echo ${{ env.DOCKER_PASSWORD }} | docker login --username=${{ env.DOCKER_USERNAME }} ${{ env.DOCKER_REGISTRY_SERVER }} --password-stdin
+      - name: Build and Push image to registry
+        run: HEROKU_API_KEY=${{ env.DOCKER_PASSWORD }} heroku container:push web --app ${{ env.APP_NAME }}
+      - name: Set environment variables
+        run: HEROKU_API_KEY=${{ env.DOCKER_PASSWORD }} heroku config:set DB_URL="${{ env.DB_URL }}" --app ${{ env.APP_NAME }}
+      - name: Deploy to Heroku
+        run: HEROKU_API_KEY=${{ env.DOCKER_PASSWORD }} heroku container:release web --app ${{ env.APP_NAME }}
