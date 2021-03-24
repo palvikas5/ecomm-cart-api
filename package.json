@@ -17,6 +17,7 @@
     "fastify-autoload": "^3.6.0",
     "fastify-cors": "^5.2.0",
     "fastify-env": "^2.1.0",
+    "fastify-oas": "^3.0.8",
     "fastify-plugin": "^3.0.0",
     "mongodb": "^3.6.5",
     "mongoose": "^5.12.1"
