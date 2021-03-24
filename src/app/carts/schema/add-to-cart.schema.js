@@ -26,7 +26,7 @@ const addToCartSchema = {
     200: {
       type: 'object',
       additionalProperties: false,
-      required: ['_id', 'summary', 'cartLines'],
+      required: ['_id', 'summary', 'cartLines', 'cartDiscount'],
       properties: {
         ...cartCommonProperties,
       },

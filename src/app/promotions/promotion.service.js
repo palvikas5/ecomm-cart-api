@@ -1,8 +1,7 @@
-const { ValidationError } = require('../../errors');
-const { NotFoundError } = require('../../errors');
+const { PROMOTION_TYPES } = require('./promotion.constants');
+const { BaseError, NotFoundError } = require('../../errors');
 const { findProductById } = require('../products/product.repository');
 const { Promotion } = require('../models/promotion');
-const { findPromotionsByProductIds } = require('./promotion.repository');
 
 const getPromotions = async () => {
   const promotions = await Promotion.find();
@@ -11,31 +10,32 @@ const getPromotions = async () => {
   };
 };
 
-const createPromotion = async (
-  fastify,
-  request,
-  { description, productId, minimumQuantity, discountPercentage },
-) => {
+const createItemPromotion = async (fastify, request, promotionPayload) => {
+  const { productId } = promotionPayload;
   const product = await findProductById(productId);
   if (!product) {
     throw new NotFoundError(`Product with ID: ${productId} not found`);
   }
-  const productPromotions = await findPromotionsByProductIds([productId]);
-  const alreadyExists = productPromotions.some(
-    promo => promo.minimumQuantity === minimumQuantity,
-  );
-  if (alreadyExists) {
-    throw ValidationError.create({
-      message:
-        'Promotion already present with same minimum quantity and product',
-    });
+  const promotion = new Promotion(promotionPayload);
+  return promotion;
+};
+
+const createCartPromotion = async (fastify, request, promotionPayload) => {
+  const promotion = new Promotion(promotionPayload);
+  return promotion;
+};
+
+const createPromotionMapping = {
+  [PROMOTION_TYPES.ITEM_PROMOTION]: createItemPromotion,
+  [PROMOTION_TYPES.CART_PROMOTION]: createCartPromotion,
+};
+
+const createPromotion = async (fastify, request, promotionPayload) => {
+  const createPromo = createPromotionMapping[promotionPayload.type];
+  if (!createPromo) {
+    throw BaseError.create(400, { message: 'Promotion type not supported' });
   }
-  const promotion = new Promotion({
-    description,
-    productId,
-    minimumQuantity,
-    discountPercentage,
-  });
+  const promotion = await createPromo(fastify, request, promotionPayload);
   return promotion.save();
 };
 

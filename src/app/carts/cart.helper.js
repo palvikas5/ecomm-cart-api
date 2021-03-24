@@ -1,27 +1,90 @@
 const {
+  DISCOUNT_TYPES,
+  RULE_OPERATORS,
+  RULE_ATTRIBUTES,
+} = require('../promotions/promotion.constants');
+
+const {
   findPromotionsByProductIds,
+  findCartPromotions,
 } = require('../promotions/promotion.repository');
 const { findProductsInIds } = require('../products/product.repository');
+
+const compileRuleOperators = operator => {
+  const mapping = {
+    [RULE_OPERATORS.GREATER_THAN_EQUAL_TO]: '>=',
+  };
+  return (leftOperand, rightOperand) => {
+    // eslint-disable-next-line no-eval
+    return eval(`${leftOperand} ${mapping[operator]} ${rightOperand}`);
+  };
+};
+
+const compileDiscount = (discountType, discountParameter) => {
+  return value => {
+    if (discountType === DISCOUNT_TYPES.FIXED) {
+      return discountParameter;
+    }
+    return value * (discountParameter / 100);
+  };
+};
 
 const calculateItemDiscount = (promotions, product, quantity) => {
   const [itemDiscount = 0] = promotions
     .filter(promo => promo.productId.equals(product.id))
     .map(promotion => {
-      const { minimumQuantity, discountPercentage } = promotion;
-
-      const promoQuantities = quantity - (quantity % minimumQuantity);
-      return (promoQuantities * product.price * discountPercentage) / 100;
+      const { rule, discount } = promotion;
+      if (rule.name === RULE_ATTRIBUTES.PRODUCT_QUANTITY) {
+        const isValidRule = compileRuleOperators(rule.operator)(
+          quantity,
+          rule.value,
+        );
+        if (isValidRule) {
+          const promoQuantities = quantity - (quantity % rule.value);
+          const discountAmount = compileDiscount(
+            discount.type,
+            discount.value,
+          )(promoQuantities * product.price);
+          return discountAmount;
+        }
+      }
+      return 0;
     })
     .sort((d1, d2) => d2 - d1);
 
   return Number(itemDiscount.toFixed(0));
 };
 
+const calculateCartDiscount = (cartPromotions, cartValue) => {
+  const [cartDiscount = 0] = cartPromotions
+    .map(promotion => {
+      const { rule, discount } = promotion;
+      if (rule.name === RULE_ATTRIBUTES.CART_VALUE) {
+        const isValidRule = compileRuleOperators(rule.operator)(
+          cartValue,
+          rule.value,
+        );
+        if (isValidRule) {
+          const discountAmount = compileDiscount(
+            discount.type,
+            discount.value,
+          )(cartValue);
+          return discountAmount;
+        }
+      }
+      return 0;
+    })
+    .sort((d1, d2) => d2 - d1);
+
+  return Number(cartDiscount.toFixed(0));
+};
+
 const computeCart = async productsWithIdAndQuantity => {
   const productIds = productsWithIdAndQuantity.map(p => p.id);
-  const [products, promotions] = await Promise.all([
+  const [products, promotions, cartPromotions] = await Promise.all([
     findProductsInIds(productIds),
     findPromotionsByProductIds(productIds),
+    findCartPromotions(),
   ]);
 
   const cartLines = products.map(product => {
@@ -39,20 +102,27 @@ const computeCart = async productsWithIdAndQuantity => {
     };
   });
 
-  const { subTotal, totalDiscount } = cartLines.reduce(
+  const { subTotal, totalItemDiscount } = cartLines.reduce(
     (acc, cartLine) => {
       acc.subTotal += cartLine.itemPrice;
-      acc.totalDiscount += cartLine.itemDiscount;
+      acc.totalItemDiscount += cartLine.itemDiscount;
       return acc;
     },
     {
       subTotal: 0,
-      totalDiscount: 0,
+      totalItemDiscount: 0,
     },
   );
 
+  const cartDiscount = calculateCartDiscount(
+    cartPromotions,
+    subTotal - totalItemDiscount,
+  );
+  const totalDiscount = totalItemDiscount + cartDiscount;
+
   return {
     cartLines,
+    cartDiscount,
     summary: {
       subTotal,
       totalDiscount,

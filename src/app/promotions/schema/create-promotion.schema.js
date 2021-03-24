@@ -1,3 +1,10 @@
+const {
+  PROMOTION_TYPES,
+  RULE_OPERATORS,
+  DISCOUNT_TYPES,
+  RULE_ATTRIBUTES,
+} = require('../promotion.constants');
+
 const createPromotionSchema = {
   querystring: {
     type: 'object',
@@ -6,24 +13,66 @@ const createPromotionSchema = {
   },
   body: {
     type: 'object',
-    required: ['productId', 'minimumQuantity', 'discountPercentage'],
+    required: ['type', 'rule', 'discount'],
     properties: {
       description: { type: 'string' },
-      minimumQuantity: { type: 'number', minimum: 1 },
+      type: { type: 'string', enum: Object.values(PROMOTION_TYPES) },
       productId: { type: 'string', minLength: 1 },
-      discountPercentage: { type: 'number', minimum: 0 },
+      rule: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'operator', 'value'],
+        properties: {
+          name: { type: 'string', enum: Object.values(RULE_ATTRIBUTES) },
+          operator: {
+            type: 'string',
+            enum: Object.values(RULE_OPERATORS),
+          },
+          value: { type: 'number' },
+        },
+      },
+      discount: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['type', 'value'],
+        properties: {
+          type: { type: 'string', enum: Object.values(DISCOUNT_TYPES) },
+          value: { type: 'number' },
+        },
+      },
     },
   },
   response: {
     200: {
       type: 'object',
-      required: ['_id', 'productId', 'minimumQuantity', 'discountPercentage'],
+      required: ['_id', 'type', 'rule', 'discount'],
       properties: {
         _id: { type: 'string' },
+        type: { type: 'string', enum: Object.values(PROMOTION_TYPES) },
         description: { type: 'string' },
         productId: { type: 'string' },
-        minimumQuantity: { type: 'number' },
-        discountPercentage: { type: 'number' },
+        rule: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['name', 'operator', 'value'],
+          properties: {
+            name: { type: 'string', enum: Object.values(RULE_ATTRIBUTES) },
+            operator: {
+              type: 'string',
+              enum: Object.values(RULE_OPERATORS),
+            },
+            value: { type: 'number' },
+          },
+        },
+        discount: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['type', 'value'],
+          properties: {
+            type: { type: 'string', enum: Object.values(DISCOUNT_TYPES) },
+            value: { type: 'number' },
+          },
+        },
       },
     },
   },

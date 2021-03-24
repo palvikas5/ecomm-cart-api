@@ -1,18 +1,41 @@
 const { Schema, model } = require('mongoose');
+const {
+  PROMOTION_TYPES,
+  RULE_ATTRIBUTES,
+  RULE_OPERATORS,
+  DISCOUNT_TYPES,
+} = require('../promotions/promotion.constants');
 
 const promotionSchema = new Schema({
   description: {
     type: String,
   },
-  productId: { type: Schema.Types.ObjectId, ref: 'Product' },
-  minimumQuantity: {
-    type: Number,
-    min: 1,
+  type: {
+    type: String,
+    enum: Object.values(PROMOTION_TYPES),
   },
-  discountPercentage: {
-    type: Number,
-    min: 0,
-    max: 100,
+  rule: {
+    name: {
+      type: String,
+      enum: Object.values(RULE_ATTRIBUTES),
+    },
+    operator: {
+      type: String,
+      enum: Object.values(RULE_OPERATORS),
+    },
+    value: {
+      type: Number,
+    },
+  },
+  productId: { type: Schema.Types.ObjectId, ref: 'Product' },
+  discount: {
+    type: {
+      type: String,
+      enum: Object.values(DISCOUNT_TYPES),
+    },
+    value: {
+      type: Number,
+    },
   },
 });
 

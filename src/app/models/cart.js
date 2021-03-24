@@ -25,6 +25,10 @@ const cartSchema = new Schema({
       },
     },
   ],
+  cartDiscount: {
+    type: Number,
+    min: 0,
+  },
   summary: {
     subTotal: {
       type: Number,

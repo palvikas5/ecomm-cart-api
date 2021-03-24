@@ -33,6 +33,7 @@ const cartCommonProperties = {
       },
     },
   },
+  cartDiscount: { type: 'number', minimum: 0 },
   summary: {
     type: 'object',
     additionalProperties: false,
