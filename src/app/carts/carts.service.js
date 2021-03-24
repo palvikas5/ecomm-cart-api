@@ -1,9 +1,9 @@
 const NotFoundError = require('../../errors/error-models/NotFoundError');
 const { computeCart } = require('./cart.helper');
-const { Cart } = require('../models/cart');
+const cartRepo = require('./cart.repository');
 
 const getCartById = async (fastify, request, cartId) => {
-  const cart = await Cart.findById(cartId);
+  const cart = await cartRepo.findById(cartId);
   if (!cart) {
     throw new NotFoundError(`Cart with ID: ${cartId} not found`);
   }
@@ -12,20 +12,18 @@ const getCartById = async (fastify, request, cartId) => {
     quantity: cartLine.quantity,
   }));
   const computedCart = await computeCart(productsWithIdAndQuantity);
-  const updatedCart = await Cart.findByIdAndUpdate(cartId, computedCart, {
-    new: true,
-  });
+  const updatedCart = await cartRepo.updateCart(cartId, computedCart);
   return updatedCart;
 };
 
 const createCart = async (fastify, request, requestBody) => {
   const computedCart = await computeCart(requestBody.products);
-  const cart = new Cart(computedCart);
-  return cart.save();
+  const cart = await cartRepo.createCart(computedCart);
+  return cart;
 };
 
 const addToCart = async (fastify, request, cartId, requestBody) => {
-  const cart = await Cart.findById(cartId);
+  const cart = await cartRepo.findById(cartId);
   if (!cart) {
     throw new NotFoundError(`Cart with ID: ${cartId} not found`);
   }
@@ -51,9 +49,7 @@ const addToCart = async (fastify, request, cartId, requestBody) => {
   }
 
   const computedCart = await computeCart(updatedCartLines);
-  const updatedCart = await Cart.findByIdAndUpdate(cartId, computedCart, {
-    new: true,
-  });
+  const updatedCart = await cartRepo.updateCart(cartId, computedCart);
   return updatedCart;
 };
 
@@ -64,7 +60,7 @@ const updateCartLine = async (
   cartLineId,
   { quantity },
 ) => {
-  const cart = await Cart.findById(cartId);
+  const cart = await cartRepo.findById(cartId);
   if (!cart) {
     throw new NotFoundError(`Cart with ID: ${cartId} not found`);
   }
@@ -77,9 +73,7 @@ const updateCartLine = async (
     quantity: cartLine.id === cartLineId ? quantity : cartLine.quantity,
   }));
   const computedCart = await computeCart(updatedCartLines);
-  const updatedCart = await Cart.findByIdAndUpdate(cartId, computedCart, {
-    new: true,
-  });
+  const updatedCart = await cartRepo.updateCart(cartId, computedCart);
   return updatedCart;
 };
 

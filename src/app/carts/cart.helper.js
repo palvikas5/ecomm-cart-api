@@ -31,7 +31,7 @@ const compileDiscount = (discountType, discountParameter) => {
 
 const calculateItemDiscount = (promotions, product, quantity) => {
   const [itemDiscount = 0] = promotions
-    .filter(promo => promo.productId.equals(product.id))
+    .filter(promo => promo.productId.toString() === product.id)
     .map(promotion => {
       const { rule, discount } = promotion;
       if (rule.name === RULE_ATTRIBUTES.PRODUCT_QUANTITY) {
@@ -89,7 +89,8 @@ const computeCart = async productsWithIdAndQuantity => {
 
   const cartLines = products.map(product => {
     const { quantity } = productsWithIdAndQuantity.find(
-      rp => rp.id === product.id,
+      rp =>
+        Buffer.from(rp.id).toString() === Buffer.from(product.id).toString(),
     );
     const itemPrice = product.price * quantity;
     const itemDiscount = calculateItemDiscount(promotions, product, quantity);
@@ -132,5 +133,9 @@ const computeCart = async productsWithIdAndQuantity => {
 };
 
 module.exports = {
+  compileDiscount,
+  compileRuleOperators,
+  calculateItemDiscount,
+  calculateCartDiscount,
   computeCart,
 };

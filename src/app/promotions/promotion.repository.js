@@ -1,6 +1,16 @@
 const { PROMOTION_TYPES } = require('./promotion.constants');
 const { Promotion } = require('../models/promotion');
 
+const createPromotion = async promotionPayload => {
+  const promotion = new Promotion(promotionPayload);
+  return promotion.save();
+};
+
+const findPromotions = async () => {
+  const promotions = await Promotion.find();
+  return promotions;
+};
+
 const findPromotionsByProductIds = async productIds => {
   const promotions = await Promotion.find({
     type: PROMOTION_TYPES.ITEM_PROMOTION,
@@ -19,4 +29,6 @@ const findCartPromotions = async () => {
 module.exports = {
   findPromotionsByProductIds,
   findCartPromotions,
+  findPromotions,
+  createPromotion,
 };

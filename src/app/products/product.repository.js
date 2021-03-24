@@ -12,7 +12,19 @@ const findProductById = async productId => {
   return product;
 };
 
+const getProductsRepo = async () => {
+  const products = await Product.find();
+  return products;
+};
+
+const createProductRepo = async productPayload => {
+  const product = new Product(productPayload);
+  return product.save();
+};
+
 module.exports = {
   findProductsInIds,
   findProductById,
+  getProductsRepo,
+  createProductRepo,
 };
